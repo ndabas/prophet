@@ -21,6 +21,7 @@ jobs:
           - ubuntu-24.04 # Intel
           - ubuntu-24.04-arm # ARM64
           - windows-latest
+          - windows-11-arm # ARM64
         cibw_arch: ["native"]
         # Build one wheel (ABI = none) using first build spec, then test on all python versions.
         cibw_build: ["cp311-* cp312-* cp313-* cp314-*"]
@@ -38,13 +39,14 @@ jobs:
       - name: "Checkout repo"
         uses: actions/checkout@v5
 
-      - name: "Restore RTools40"
+      - name: "Restore RTools"
         if: startsWith(runner.os, 'Windows')
         id: cache-rtools
         uses: actions/cache@v4
         with:
-          path: C:/rtools40
-          key: ${{ runner.os }}-${{ env.OS_VERSION }}-rtools-v1
+          # cmdstanpy's default RTools install dir
+          path: ~/.cmdstan
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ env.OS_VERSION }}-rtools-v1
 
       - name: "Build wheels"
         uses: pypa/cibuildwheel@v4.2.0

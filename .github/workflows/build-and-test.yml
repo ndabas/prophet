@@ -19,6 +19,7 @@ jobs:
           - ubuntu-24.04 # Intel
           - ubuntu-24.04-arm # ARM64
           - windows-latest
+          - windows-11-arm # ARM64
       fail-fast: false
 
     steps:
@@ -36,17 +37,19 @@ jobs:
         python-version: ${{ matrix.python-version }}
         cache: pip
         cache-dependency-path: "**/python/pyproject.toml"
-    - name: "Restore RTools40"
+    - name: "Restore RTools"
       if: startsWith(runner.os, 'Windows')
       id: cache-rtools
       uses: actions/cache@v4
       with:
-        path: C:/rtools40
-        key: ${{ runner.os }}-${{ env.OS_VERSION }}-rtools-v1
+        # cmdstanpy's default RTools install dir
+        path: ~/.cmdstan
+        key: ${{ runner.os }}-${{ runner.arch }}-${{ env.OS_VERSION }}-rtools-v1
     - name: Install and test
       run: |
         cd python
-        python -m pip install -U --editable ".[dev,parallel]"
+        # pyarrow (needed by dask[dataframe]) has no win_arm64 wheels
+        python -m pip install -U --editable ".[${{ matrix.os == 'windows-11-arm' && 'dev' || 'dev,parallel' }}]"
         python -m pytest prophet/tests/
 
   typecheck-python:
